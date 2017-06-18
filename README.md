@@ -1,9 +1,16 @@
 # NYT Training 2017: Microservices with ASP.NET Core/Linux toolset
 ## Preparations
-- Windows 10
-- Visual Studio 2017 Community Edition (ASP.NET Core)
-- MySQL Community Server 5.7
-- MySQL Workbench 6.3
+- Windows 10 development machine
+- Visual Studio 2017 Community Edition (ASP.NET Core): https://www.visualstudio.com/downloads/
+- Install VS2017 Extension: Visual Studio Developer Command Prompt (devCmd): https://marketplace.visualstudio.com/items?itemName=ShemeerNS.VisualStudioCommandPromptdevCmd
+- MySQL Community Server 5.7 & MySQL Workbench 6.3: https://dev.mysql.com/downloads/installer/
+- Install Node.js & npm: https://nodejs.org/en/
+```bash
+	# check installed node.js version
+	node -v
+	# check installed npm version
+	npm -v
+```
 
 ## Session 1: Build Backend API with ASP.NET Core WebAPI
 1) New ASP.NET Core API from VS2017 Community Edition
@@ -18,6 +25,7 @@
 4) Install Service: $winsw-1.19.1-bin.exe install
 5) Edit nginx.conf: include sites-availabled/*.host; && REMOVE all server configurations {}
 6) Configure sites-availabled/domain.name.host
+```conf
 	server {
 		listen 80;
 		access_log logs/access_domain_name.log;
@@ -30,6 +38,7 @@
 			proxy_set_header Host domain.name;
 		}
 	}
+```
 7) Map host C:\Windows\System32\drivers\etc\hosts
 	127.0.0.1 domain.name 
 8) Run $services.msc restart
@@ -39,15 +48,19 @@
 ## Session 3: 
 1. Install & restore nuget Swashbuckle.AspNetCore
 2. Startup.ConfigureServices
+```csharp
 	services.AddSwaggerGen(c => {
 		c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "XXXService API", Version = "v1" });
 	});
+```
 3. Startup.Configure request pipeline
+```csharp
 	app.UseMvcWithDefaultRoute();
 	app.UseSwagger();
 	app.UseSwaggerUI(c => {
 		c.SwaggerEndpoint("/swagger/v1/swagger.json", "XXXService API V1");
 	});
+```
 4. DEBUG http://domain.name/swagger
 
 ## Session 4: Backend Swagger Client
@@ -65,6 +78,7 @@
 
 ## Session 6: Backend MySQL & Entity Framework Core
 1. Scaffolding project: https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql
+```xml
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.1.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="1.1.1" />
@@ -74,17 +88,22 @@
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.1" />
   </ItemGroup>
+```
 2. Restore NUGET & BUILD
 3. dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=xxx" "Pomelo.EntityFrameworkCore.MySql"
 4. Create Models & Context
 5. Startup.ConfigureServices
+```csharp
 	using Microsoft.EntityFrameworkCore;
 	services.AddDbContext<XXXContext>(options => options.UseMySql(Configuration.GetConnectionString("xxxdb")));
 	TaskContext.OnConfiguring => ignore
+```
 6. appsettings:
+```json
 	"ConnectionStrings": {
 		"xxxxdb": "Server=localhost;User Id=root;Password=123456;Database=xxx"
 	}
+```
 7. dotnet ef migrations add Initial
 8. Add model class & DbSet + Build
 9. dotnet ef migrations add CreateTaskTable

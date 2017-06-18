@@ -1,0 +1,12 @@
+server {
+	listen 80;
+	access_log logs/access_userservice_dev.log;
+	error_log logs/error_userservice_dev.log;
+	
+	server_name userservice.dev;
+	
+	location / {
+		proxy_pass http://localhost:5001;
+		proxy_set_header Host userservice.dev;
+	}
+}

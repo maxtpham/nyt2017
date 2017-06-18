@@ -1,0 +1,12 @@
+server {
+	listen 80;
+	access_log logs/access_taskservice_dev.log;
+	error_log logs/error_taskservice_dev.log;
+	
+	server_name taskservice.dev;
+	
+	location / {
+		proxy_pass http://localhost:5002;
+		proxy_set_header Host taskservice.dev;
+	}
+}
