@@ -1,0 +1,1 @@
+autorest -Namespace nyt.core.users.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName nyt.core.users.client

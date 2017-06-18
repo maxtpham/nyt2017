@@ -1,0 +1,32 @@
+{
+  "name": "nyt.core.web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bootstrap": "^3.3.34",
+    "@types/jquery": "^2.0.41",
+    "@types/moment": "^2.13.0",
+    "bootstrap": "^3.3.7",
+    "css-loader": "^0.28.4",
+    "extract-text-webpack-plugin": "^2.1.2",
+    "file-loader": "^0.11.2",
+    "jquery": "^3.2.1",
+    "moment": "^2.18.1",
+    "style-loader": "^0.18.2",
+    "ts-loader": "^2.0.3",
+    "typescript": "^2.2.2",
+    "webpack": "^2.3.3"
+  },
+  "-vs-binding": {
+    "BeforeBuild": [
+      "build"
+    ]
+  }
+}
