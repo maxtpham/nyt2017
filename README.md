@@ -15,6 +15,7 @@
 	# check installed npm version
 	npm -v
 ```
+- Install [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio)
 
 ## Session 1: Build Backend API
 1. New ASP.NET Core API from VS2017 Community Edition
@@ -102,7 +103,7 @@
 ```
 7. Debug both Client & Server
 
-## Session 5: Backend MySQL & Entity Framework Core
+## Session 5: Configure Entity Framework Core MySQL for ASP.NET Core APIs
 1. [Scaffolding MySQL.EFCore](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) by editing **csproj** ASP.NET Core API project file
 ```xml
   <ItemGroup>
@@ -117,7 +118,7 @@
 ```
 2. Restore NUGET for the solution in VS2017 & Build
 3. Create *blank/empty* local schema in MySQL Workbench named **xxx**
-4. Link Entity Framework Core to **xxx** MySQL database
+4. Link Entity Framework Core to **xxx** local MySQL database
 ```bash
 	dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=xxx" "Pomelo.EntityFrameworkCore.MySql"
 ```
@@ -170,26 +171,42 @@
         }
 	}
 ```
-15. Then we can use the EF Core DbContext in Web APIs code
+15. Use EF Core DbContext in Web APIs code
 ```csharp
         [HttpGet]
-        public Task<xxx[]> Get()
+        public async Task<xxx[]> Get()
         {
-            return this.context.xxxs.ToArrayAsync();
+            return await this.context.xxxs.ToArrayAsync();
         }
 ```
 
-## Session 6: Frontend with Typescript
-1) Template: https://github.com/thanhptr/aspnet-core-typescript
-2) Rename -> ProjectName
-3) Startup.Configure(): app.UseMvcWithDefaultRoute()
-4) tsconfig: "lib": ["dom", "es5", "es2015"]
-5) NSwagStudio: generate API.ts
-6) API.ts: export namespace
-7) webpack.config: include API.ts
-8) PostBuild: npm run build
-9) client test & binding with Knockout
-10) Fix ServiceAPI "Access-Control-Allow-Origin"
-	Startup.ConfigureServices: services.AddCors()
-	Startup.ConfigurePipeline: app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-11) Back to frontend to test
+## Session 6: Build ASP.NET Core MVC Frontend with Typescript & NSwagStudio
+1. Template: https://github.com/thanhptr/aspnet-core-typescript
+2. Rename the template to **ProjectName**
+3. Use [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio) to generate & save **XXXServiceAPI.ts** to __$project/scripts__ folder
+4. Edit **XXXServiceAPI.ts** to add ***export*** for default namespace
+```typescript
+	export namespace xxxAPI {
+	}
+```
+5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **XXXServiceAPI.ts**
+```typescript
+    let xxxClient = new XXXServiceAPI.Client("http://domain.name");
+    xxxClient.apiXxxGet().then(result => console.log("API result", result));
+```
+6. Build & Run, we will encouter error message from Browser at Web API calling code: Access-Control-Allow-Origin
+7. Fix ServiceAPI "Access-Control-Allow-Origin": by coming back to ASP.NET Core APIs project in VS2017
+```csharp
+	public class Startup
+	{
+		public void ConfigureServices(IServiceCollection services)
+		{
+			services.AddCors();
+		}
+		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+		{
+			app.UseCors(b => b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+		}
+	}
+```
+9. Back to browser to test again!
