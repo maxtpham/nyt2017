@@ -1,10 +1,14 @@
 # NYT Training 2017: Microservices with ASP.NET Core/Linux toolset
 ## Preparations
 - Windows 10 development machine
-- Visual Studio 2017 Community Edition (ASP.NET Core): https://www.visualstudio.com/downloads/
-- Install VS2017 Extension: Visual Studio Developer Command Prompt (devCmd): https://marketplace.visualstudio.com/items?itemName=ShemeerNS.VisualStudioCommandPromptdevCmd
-- MySQL Community Server 5.7 & MySQL Workbench 6.3: https://dev.mysql.com/downloads/installer/
-- Install Node.js & npm: https://nodejs.org/en/
+- Install [Visual Studio 2017](https://www.visualstudio.com/downloads/) Community Edition (ASP.NET Core)
+- Install VS2017 Extension: Visual Studio Developer Command Prompt: [devCmd](https://marketplace.visualstudio.com/items?itemName=ShemeerNS.VisualStudioCommandPromptdevCmd)
+- Install [MySQL](https://dev.mysql.com/downloads/windows/installer/5.7.html) Server & MySQL Workbench
+```conf
+	username: root
+	password: 123456
+```
+- Install [Node.js](https://nodejs.org/en/) & npm
 ```bash
 	# check installed node.js version
 	node -v
@@ -12,19 +16,32 @@
 	npm -v
 ```
 
-## Session 1: Build Backend API with ASP.NET Core WebAPI
-1) New ASP.NET Core API from VS2017 Community Edition
-2) Program.UseUrls("http://localhost:5001") & switch to Launch Project
-3) Debug http://localhost:5001/api/values
-4) dotnet run
+## Session 1: Build Backend API
+1. New ASP.NET Core API from VS2017 Community Edition
+2. Program.UseUrls("http://localhost:5001") & switch to Launch Project
+3. Debug http://localhost:5001/api/values
+4. Run in background
+```bash
+	dotnet run
+```
 
 ## Session 2: Configure NGINX Server 
-1) Download nginx: http://nginx.org/download/nginx-1.12.0.zip
-2) Setup environment variable: %NGINX_HOME%
-3) Download winsw: http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/2.1.0/
-4) Install Service: $winsw-1.19.1-bin.exe install
-5) Edit nginx.conf: include sites-availabled/*.host; && REMOVE all server configurations {}
-6) Configure sites-availabled/domain.name.host
+1. Download nginx: http://nginx.org/download/nginx-1.12.0.zip
+2. Download winsw: http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/2.1.0/
+3. Extract to the NGINX folder & Set environment variable: %NGINX_HOME%
+4. Install the Service
+```bash
+	winsw-1.19.1-bin.exe install
+```
+5. Edit nginx.conf: include sites-availabled/*.host; && REMOVE all server configurations {}
+```conf
+	http {
+	...
+		include       sites-availabled/*.host;
+	...
+	}
+```
+6. Create file sites-availabled/domain.name.host
 ```conf
 	server {
 		listen 80;
@@ -34,50 +51,59 @@
 		server_name domain.name;
 
 		location / {
-			proxy_pass http://localhost:500x;
+			proxy_pass http://localhost:5001;
 			proxy_set_header Host domain.name;
 		}
 	}
 ```
-7) Map host C:\Windows\System32\drivers\etc\hosts
+7. Map host C:\Windows\System32\drivers\etc\hosts
+```conf
 	127.0.0.1 domain.name 
-8) Run $services.msc restart
-9) Test http://domain.name/api/values
-10) NGINX & DEBUG http://domain.name/api/values (from the Session 1)
+```
+8. Start NGINX service in services.msc
+9. Test & Debug VS2017 NGINX url: http://domain.name/api/values
 
-## Session 3: 
-1. Install & restore nuget Swashbuckle.AspNetCore
-2. Startup.ConfigureServices
+## Session 3: Configure Swagger UI for ASP.NET Core APIs
+1. Install & restore NUGET package **Swashbuckle.AspNetCore** to the ASP.NET Core APIs project
+2. Edit **Startup.ConfigureServices(IServiceCollection services)** function to include
 ```csharp
 	services.AddSwaggerGen(c => {
-		c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "XXXService API", Version = "v1" });
+		c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info {
+			Title = "XXXService API", Version = "v1"
+		});
 	});
 ```
-3. Startup.Configure request pipeline
+3. Edit **Startup.Configure(IApplicationBuilder app)** to change request pipeline
 ```csharp
 	app.UseMvcWithDefaultRoute();
 	app.UseSwagger();
 	app.UseSwaggerUI(c => {
-		c.SwaggerEndpoint("/swagger/v1/swagger.json", "XXXService API V1");
+		c.SwaggerEndpoint("/swagger/v1/swagger.json", "XXXService API v1");
 	});
 ```
-4. DEBUG http://domain.name/swagger
+4. Run & Debug **Swagger UI** url: http://domain.name/swagger
 
-## Session 4: Backend Swagger Client
-1. Create .NET Core Console domain.name.client lib/app
-2. Install autorest: npm install -g autorest
-3. Save http://domain.name/swagger/v1/swagger.json
-4. autorest -Namespace domain.name.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName domain.name.client
-5. NUGET: Microsoft.Rest.ClientRuntime
-6. Program.Main: api client calls
-7. DEBUG Client & Server
+## Session 4: Build Swagger C# Client
+1. Create new .NET Core Console project named: **domain.name.client**
+2. Install **autorest** npm package: 
+```bash
+	npm install -g autorest
+```
+3. Save Swagger file http://domain.name/swagger/v1/swagger.json to project root
+4. Run the autorest C# generation tool at project root
+```bash
+	autorest -Namespace domain.name.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName domain.name.client
+```
+5. Install & restore NUGET package **Microsoft.Rest.ClientRuntime**
+6. Edit **Program.Main()** to test generarted client code by calling ASP.NET Core APIs
+```csharp
+    var client = new XXXServiceAPI(new Uri("http://domain.name"));
+    Console.WriteLine($"API Result: {client.ApiValuesGet()}");
+```
+7. Debug both Client & Server
 
-## Session 5: Server MySQL
-1. Install MySQL Server & Workbench: https://dev.mysql.com/downloads/windows/installer/5.7.html
-2. Create empty schema from Workbench
-
-## Session 6: Backend MySQL & Entity Framework Core
-1. Scaffolding project: https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql
+## Session 5: Backend MySQL & Entity Framework Core
+1. [Scaffolding MySQL.EFCore](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) by editing **csproj** ASP.NET Core API project file
 ```xml
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.1.2" />
@@ -89,33 +115,71 @@
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.1" />
   </ItemGroup>
 ```
-2. Restore NUGET & BUILD
-3. dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=xxx" "Pomelo.EntityFrameworkCore.MySql"
-4. Create Models & Context
-5. Startup.ConfigureServices
+2. Restore NUGET for the solution in VS2017 & Build
+3. Create *blank/empty* local schema in MySQL Workbench named **xxx**
+4. Link Entity Framework Core to **xxx** MySQL database
+```bash
+	dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=xxx" "Pomelo.EntityFrameworkCore.MySql"
+```
+5. Create **Models & DbContext** classes in VS2017
+6. Edit **Startup.ConfigureServices()** to support newly created DbContext
 ```csharp
 	using Microsoft.EntityFrameworkCore;
 	services.AddDbContext<XXXContext>(options => options.UseMySql(Configuration.GetConnectionString("xxxdb")));
-	TaskContext.OnConfiguring => ignore
 ```
-6. appsettings:
-```json
-	"ConnectionStrings": {
-		"xxxxdb": "Server=localhost;User Id=root;Password=123456;Database=xxx"
+7. Edit **DbContext** class to ignore manual configuration at server run-time
+```csharp
+	public partial class XXXContext : DbContext
+	{
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		{
+			if (!optionsBuilder.IsConfigured)
+				optionsBuilder.UseMySql(@"Server=localhost;User Id=root;Password=123456;Database=xxx");
+		}
 	}
 ```
-7. dotnet ef migrations add Initial
-8. Add model class & DbSet + Build
-9. dotnet ef migrations add CreateTaskTable
-10. Build
-11. dotnet ef database update
-12. MySQL WorkBench to check
-13. Test Query
-14. DI for Context to Controller
-15. Test Query with DI
+8. Add new connection string to **appsettings.json**:
+```json
+	"ConnectionStrings": {
+		"xxxdb": "Server=localhost;User Id=root;Password=123456;Database=xxx"
+	}
+```
+9. Run command to initialize *Entity Framwork Core* **Code-first migration** to the project
+```bash
+	dotnet ef migrations add Initial
+```
+10. Manually add model classes & DbSet then build the project
+11. Run command to create a migration for model changes then build the project
+```bash
+	dotnet ef migrations add <db_change_name>
+```
+12. Run update to apply the model changes to MySQL database
+```bash
+	dotnet ef database update
+```
+13. Open MySQL WorkBench to check newly created tables
+14. Edit API Controller to support **Dependency Injection** for the new DbContext
+```csharp
+    public class XXXController : Controller
+    {
+        private XXXContext context;
 
+        public XXXController(XXXContext context)
+        {
+            this.context = context;
+        }
+	}
+```
+15. Then we can use the EF Core DbContext in Web APIs code
+```csharp
+        [HttpGet]
+        public Task<xxx[]> Get()
+        {
+            return this.context.xxxs.ToArrayAsync();
+        }
+```
 
-## Session 7: Frontend with Typescript
+## Session 6: Frontend with Typescript
 1) Template: https://github.com/thanhptr/aspnet-core-typescript
 2) Rename -> ProjectName
 3) Startup.Configure(): app.UseMvcWithDefaultRoute()
