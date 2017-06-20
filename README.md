@@ -198,7 +198,7 @@ namespace nyt.core.tasks
         public void ConfigureServices(IServiceCollection services)
         {
             ...
-            services.AddDbContext<XXXContext>(options => options.UseMySql(Configuration.GetConnectionString("taskdb")));
+            services.AddDbContext<TaskContext>(options => options.UseMySql(Configuration.GetConnectionString("taskdb")));
         }
         ...
     }
@@ -252,7 +252,7 @@ cd <project-folder>
 dotnet ef database update
 ```
 13. Open MySQL WorkBench to check newly created tables, we should see **task** table
-14. Create new API Controller to support **Dependency Injection** for the new DbContext & add some code
+14. Create new API Controller to support **Dependency Injection** for the new DbContext & add CRUD APIs to the MySQL
 ```csharp
 [Route("api/[controller]")]
 public class TasksController : Controller
@@ -315,32 +315,41 @@ public class TasksController : Controller
 ```
 
 ## Session 6: Build ASP.NET Core MVC Frontend with Typescript & NSwagStudio
-1. Template: https://github.com/thanhptr/aspnet-core-typescript
-2. Rename the template to **ProjectName**
-3. Use [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio) to generate & save **TaskServiceAPI.ts** to __$project/scripts__ folder
+1. Get the pre-built ASP.NET Core MVC template from: https://github.com/thanhptr/aspnet-core-typescript
+2. Rename the Project to **nyt.core.web**
+3. Use [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio) to generate the code & save to **scripts\TaskServiceAPI.ts**:
+- Input: **URL** to: http://taskservice.dev/swagger/v1/swagger.json
+- Output: check to **TypeScript Client**
+- Output\Settings for TypeScript: set Namespace to **TaskServiceAPI**, version to **2.0**, Template to **JQueryPromisses**, Promise Type to **Promise**
+- Then click **Generate Outputs** and copy the Output to **TaskServiceAPI.ts** file
 4. Edit **TaskServiceAPI.ts** to add ***export*** for default namespace
 ```typescript
-export namespace xxxAPI {
+export namespace TaskServiceAPI {
+...
 }
 ```
 5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **TaskServiceAPI.ts**
 ```typescript
-let xxxClient = new TaskServiceAPI.Client("http://taskservice.dev");
-xxxClient.apiXxxGet().then(result => console.log("API result", result));
+let taskServiceClient = new TaskServiceAPI.Client("http://taskservice.dev");
+taskClient.apiTasksGet().then(result => console.log("API result", result));
 ```
-6. Build & Run, we will encouter error message from Browser at Web API calling code: Access-Control-Allow-Origin
-7. Fix ServiceAPI "Access-Control-Allow-Origin": by coming back to ASP.NET Core APIs project in VS2017
+6. Build & Run then see Console log in **Google Chrome**, we will see an error message: *Access-Control-Allow-Origin*
+7. Fix ServiceAPI "Access-Control-Allow-Origin": by coming back to **nyt.core.tasks** project in VS2017
 ```csharp
 public class Startup
 {
-	public void ConfigureServices(IServiceCollection services)
-	{
-		services.AddCors();
-	}
-	public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-	{
-		app.UseCors(b => b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-	}
+    public void ConfigureServices(IServiceCollection services)
+    {
+        ...
+        services.AddCors();
+        ...
+    }
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+    {
+        ...
+        app.UseCors(b => b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+        ...
+    }
 }
 ```
-9. Back to browser to test again!
+9. Rebuild & run **nyt.core.tasks** project, then back to browser to test again!
