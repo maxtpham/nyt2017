@@ -1,4 +1,24 @@
 # NYT Training 2017: Microservices with ASP.NET Core/Linux toolset
+## Introduction
+**.NET Core** - a newest & just 1 year old KID by Microsoft - is a general purpose, open source, cross-platform implementation of .NET platform; maintained by Microsoft and the GitHub community. As it is cross platform, it can support all formats like Windows, Linux, Mac OS and in devices, cloud services and most importantly in embedded/IoT devices.
+
+By completing this course, **NYT** will be able to understand the full-cycle of **modern** & trending **ASP.NET Core** development from Database storage to Services layer and up to frontend browser User Interfaces. The technologies and skills are including:
+1. **MySQL database** is the world most popular Opensource RDBMS DB engine, cross platform (Linux & Windows hosting), free, hi-performance, scalable & using in FaceBook data storage
+2. **Entity Framework (EF) Core** is a lightweight, extensible, and cross-platform version of the popular Entity Framework data access technology. EF Core is an object-relational mapper (O/RM) that enables .NET developers to work with a database using .NET objects
+3. **EF Code-First aproach** helps developers focus on the domain design and start creating classes as per your domain requirement rather than design your database first and then create the classes which match your database design. Code-First APIs will create the database on the fly based on your entity classes and configuration.
+4. **ASP.NET Core Web APIs**: learn how C# .NET bring the simplicity & productivity to developers if compare to any other server-side development technologies available today, no other can beat :)
+5. **Swagger & Swagger UI**: is a must have tool for API development today, without it, the project will be quick to loose the control if it grow from hundreds to thoudsands of APIs, as Web APIs is standard for inter-process & server-to-server communication in the world today, so that the number of APIs in a project will be uncountable
+6. **NGINX** is an open source, lightweight, high-performance web server or proxy server. NGINX will be act as API Gateway as well as Web Application Gateway for most of the system today, very few systems are still exposing directly their Web Server to the Internet due to security concerns as well as the complexity of the whole system without the help of things like proxy
+7. Simple & modern **Front-End development technologies**: TypeScript, JQuery, Bootstrap, npm/webpack
+
+## Why Linux?
+By gaining the knowledge for the set of tools & skills in this course, NYT will be to be able to deploy the whole system to Linux based Servers, to take all the advantages of the Linux OS such as:
+- Opensource & Free: no monthly license fee for hosting providers (Windows Server license can up to $20/VM/month)
+- Super-low resources consuming at production hosting: less CPU overhead, 20M-100M of RAM (if compare to GB of RAM in Windows Server requirements)
+- Super-cheap hosting: can be hosted in $2/month VM & very easy to find GIANT low-end hosting providers (Vultr, Linode, DO)
+- Highly customizable OS distribution for the need of deployment, instead of single OS for all purpose if compare to Windows Servers
+- Huge community as well as huge toolset/technologies/components for server side management
+
 ## Preparations
 - Windows 10 development machine
 - Install [Visual Studio 2017](https://www.visualstudio.com/downloads/) Community Edition (ASP.NET Core)
