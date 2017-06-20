@@ -108,24 +108,28 @@ server {
 10. Back to **Step 3 in Session 1** in VS2017 to change the **Project Url** to http://taskservice.dev/api/values
 
 ## Session 3: Configure Swagger UI for ASP.NET Core APIs
-1. Install & restore NUGET package **Swashbuckle.AspNetCore** to the ASP.NET Core APIs project
-2. Edit **Startup.ConfigureServices(IServiceCollection services)** function to include
+1. Go back VS2017 with project **nyt.core.tasks**
+2. Right click on the Solution, choose **Manage NuGet Packages for Solution..** from context menu
+3. Choose tab **Browse** then type **Swashbuckle.AspNetCore**, choose the found package
+4. Check on the **nyt.core.tasks** in the right panel & click **Install**
+5. Edit **Startup.ConfigureServices(IServiceCollection services)** function to configure Swagger for the project
 ```csharp
 services.AddSwaggerGen(c => {
 	c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info {
-		Title = "XXXService API", Version = "v1"
+		Title = "TaskService API", Version = "v1"
 	});
 });
 ```
-3. Edit **Startup.Configure(IApplicationBuilder app)** to change request pipeline
+6. Edit **Startup.Configure(IApplicationBuilder app)** to change request pipeline
 ```csharp
 app.UseMvcWithDefaultRoute();
 app.UseSwagger();
 app.UseSwaggerUI(c => {
-	c.SwaggerEndpoint("/swagger/v1/swagger.json", "XXXService API v1");
+	c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskService API v1");
 });
 ```
-4. Run & Debug **Swagger UI** url: http://taskservice.dev/swagger
+7. Run & Debug project with **Swagger UI** by browse to url: http://taskservice.dev/swagger
+8. Back to **Step 3 in Session 1** in VS2017 to change the **Project Url** to http://taskservice.dev/swagger
 
 ## Session 4: Build Swagger C# Client
 1. Create new .NET Core Console project named: **taskservice.dev.client**
@@ -141,7 +145,7 @@ autorest -Namespace taskservice.dev.client -CodeGenerator CSharp -Modeler Swager
 5. Install & restore NUGET package **Microsoft.Rest.ClientRuntime**
 6. Edit **Program.Main()** to test generarted client code by calling ASP.NET Core APIs
 ```csharp
-var client = new XXXServiceAPI(new Uri("http://taskservice.dev"));
+var client = new TaskServiceAPI(new Uri("http://taskservice.dev"));
 Console.WriteLine($"API Result: {client.ApiValuesGet()}");
 ```
 7. Debug both Client & Server
@@ -226,15 +230,15 @@ public async Task<xxx[]> Get()
 ## Session 6: Build ASP.NET Core MVC Frontend with Typescript & NSwagStudio
 1. Template: https://github.com/thanhptr/aspnet-core-typescript
 2. Rename the template to **ProjectName**
-3. Use [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio) to generate & save **XXXServiceAPI.ts** to __$project/scripts__ folder
-4. Edit **XXXServiceAPI.ts** to add ***export*** for default namespace
+3. Use [NSwagStudio](https://github.com/NSwag/NSwag/wiki/NSwagStudio) to generate & save **TaskServiceAPI.ts** to __$project/scripts__ folder
+4. Edit **TaskServiceAPI.ts** to add ***export*** for default namespace
 ```typescript
 export namespace xxxAPI {
 }
 ```
-5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **XXXServiceAPI.ts**
+5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **TaskServiceAPI.ts**
 ```typescript
-let xxxClient = new XXXServiceAPI.Client("http://taskservice.dev");
+let xxxClient = new TaskServiceAPI.Client("http://taskservice.dev");
 xxxClient.apiXxxGet().then(result => console.log("API result", result));
 ```
 6. Build & Run, we will encouter error message from Browser at Web API calling code: Access-Control-Allow-Origin
