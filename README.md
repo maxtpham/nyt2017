@@ -131,27 +131,28 @@ app.UseSwaggerUI(c => {
 7. Run & Debug project with **Swagger UI** by browse to url: http://taskservice.dev/swagger
 8. Back to **Step 3 in Session 1** in VS2017 to change the **Project Url** to http://taskservice.dev/swagger
 
-## Session 4: Build Swagger C# Client
-1. Create new .NET Core Console project named: **taskservice.dev.client**
-2. Install **autorest** npm package: 
+## Session 4: Build Swagger C# Client by AutoRest
+1. Open command prompt to install **autorest** npm package: 
 ```bash
 npm install -g autorest
 ```
-3. Save Swagger file http://taskservice.dev/swagger/v1/swagger.json to project root
+2. Create new .NET Core Console project named: **nyt.core.tasks.client**
+3. Open Browser and save Swagger file http://taskservice.dev/swagger/v1/swagger.json to project root
 4. Run the autorest C# generation tool at project root
 ```bash
-autorest -Namespace taskservice.dev.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName taskservice.dev.client
+autorest -Namespace nyt.core.tasks.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName nyt.core.tasks.client
 ```
-5. Install & restore NUGET package **Microsoft.Rest.ClientRuntime**
+5. Install & restore NUGET package **Microsoft.Rest.ClientRuntime** for the project (refer to Step 2 to Step 4 in Session 3)
 6. Edit **Program.Main()** to test generarted client code by calling ASP.NET Core APIs
 ```csharp
-var client = new TaskServiceAPI(new Uri("http://taskservice.dev"));
-Console.WriteLine($"API Result: {client.ApiValuesGet()}");
+var taskServiceAPI = new TaskServiceAPI(new Uri("http://taskservice.dev"));
+Console.WriteLine($"API Result: {taskServiceAPI.ApiValuesGet()}");
 ```
-7. Debug both Client & Server
+7. Debug both Client & Server in 2 difference VS2017 windows
 
 ## Session 5: Configure Entity Framework Core MySQL for ASP.NET Core APIs
-1. [Scaffolding MySQL.EFCore](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) by editing **csproj** ASP.NET Core API project file
+1. Go back VS2017 with project **nyt.core.tasks**
+2. [Scaffolding MySQL.EFCore](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) by editing **nyt.core.tasks.csproj** project file in any Text/XML editor to add the following code
 ```xml
 <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.1.2" />
@@ -163,67 +164,153 @@ Console.WriteLine($"API Result: {client.ApiValuesGet()}");
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.1" />
 </ItemGroup>
 ```
-2. Restore NUGET for the solution in VS2017 & Build
-3. Create *blank/empty* local schema in MySQL Workbench named **xxx**
-4. Link Entity Framework Core to **xxx** local MySQL database
+3. Rebuild the solution in VS2017
+4. Create *blank/empty* local schema in MySQL Workbench named **taskdb**
+5. Link Entity Framework Core to **taskdb** local MySQL database
 ```bash
-dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=xxx" "Pomelo.EntityFrameworkCore.MySql"
+cd <project-folder>
+dotnet ef dbcontext scaffold "Server=localhost;User Id=root;Password=123456;Database=taskdb" "Pomelo.EntityFrameworkCore.MySql"
 ```
-5. Create **Models & DbContext** classes in VS2017
-6. Edit **Startup.ConfigureServices()** to support newly created DbContext
+6. Create **DbContext** class at **Models\TaskContext.cs**
 ```csharp
-using Microsoft.EntityFrameworkCore;
-services.AddDbContext<XXXContext>(options => options.UseMySql(Configuration.GetConnectionString("xxxdb")));
-```
-7. Edit **DbContext** class to ignore manual configuration at server run-time
-```csharp
-public partial class XXXContext : DbContext
+namespace nyt.core.tasks.Models
 {
-	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-	{
-		if (!optionsBuilder.IsConfigured)
-			optionsBuilder.UseMySql(@"Server=localhost;User Id=root;Password=123456;Database=xxx");
-	}
+    public partial class TaskContext : DbContext
+    {
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+                optionsBuilder.UseMySql(@"Server=localhost;User Id=root;Password=123456;Database=nyttask");
+        }
+    }
+}
+```
+7. Edit **Startup.ConfigureServices()** to support newly created DbContext
+```csharp
+...
+using Microsoft.EntityFrameworkCore;
+
+namespace nyt.core.tasks
+{
+    public class Startup
+    {
+        ...
+        public void ConfigureServices(IServiceCollection services)
+        {
+            ...
+            services.AddDbContext<XXXContext>(options => options.UseMySql(Configuration.GetConnectionString("taskdb")));
+        }
+        ...
+    }
 }
 ```
 8. Add new connection string to **appsettings.json**:
 ```json
 "ConnectionStrings": {
-	"xxxdb": "Server=localhost;User Id=root;Password=123456;Database=xxx"
+	"taskdb": "Server=localhost;User Id=root;Password=123456;Database=taskdb"
 }
 ```
-9. Run command to initialize *Entity Framwork Core* **Code-first migration** to the project
+10. Run command to initialize *Entity Framwork Core* **Code-first migration** to the project
 ```bash
+cd <project-folder>
 dotnet ef migrations add Initial
 ```
-10. Manually add model classes & DbSet then build the project
-11. Run command to create a migration for model changes then build the project
-```bash
-dotnet ef migrations add <db_change_name>
-```
-12. Run update to apply the model changes to MySQL database
-```bash
-dotnet ef database update
-```
-13. Open MySQL WorkBench to check newly created tables
-14. Edit API Controller to support **Dependency Injection** for the new DbContext
+11. Create **task** object at **Models\task.cs**
 ```csharp
-public class XXXController : Controller
+namespace nyt.core.tasks.Models
 {
-    private XXXContext context;
-
-    public XXXController(XXXContext context)
+    public class task
     {
-        this.context = context;
+        [Key]
+        public Guid id { get; set; }
+
+        [Required, MaxLength(50)]
+        public string code { get; set; }
+
+        [Required, MaxLength(256)]
+        public string title { get; set; }
+
+        [MaxLength(Int32.MaxValue)]
+        public string content { get; set; }
+
+        public DateTime created { get; set; }
+        public DateTime updated { get; set; }
+        public Guid? creator { get; set; }
+        public Guid? assignee { get; set; }
     }
 }
 ```
-15. Use EF Core DbContext in Web APIs code
+12. Run command to create database migration for model changes then build the project
+```bash
+cd <project-folder>
+dotnet ef migrations add AddTaskTable
+```
+13. Rebuild the project
+14. Run update to apply the model changes to MySQL database
+```bash
+cd <project-folder>
+dotnet ef database update
+```
+13. Open MySQL WorkBench to check newly created tables, we should see **task** table
+14. Create new API Controller to support **Dependency Injection** for the new DbContext & add some code
 ```csharp
-[HttpGet]
-public async Task<xxx[]> Get()
+[Route("api/[controller]")]
+public class TasksController : Controller
 {
-    return await this.context.xxxs.ToArrayAsync();
+    private Models.TaskContext context;
+
+    // Dependency Injection will create & pass TaskContext to the object here
+    public TasksController(Models.TaskContext context)
+    {
+        this.context = context;
+    }
+
+    // Query a list of tasks from MySQL
+    [HttpGet]
+    public Task<task[]> Get()
+    {
+        return this.context.tasks.OrderByDescending(o => o.updated).Take(10).ToArrayAsync();
+    }
+
+    // Query a task by id from MySQL
+    [HttpGet("{id}")]
+    public Task<task> Get(Guid id)
+    {
+        return this.context.tasks.Where(t => t.id == id).SingleAsync();
+    }
+
+    // Create new task then save to MySQL
+    [HttpPost]
+    public Task Post([FromBody]task task)
+    {
+        if (task.id == Guid.Empty)
+            task.id = Guid.NewGuid();
+        task.created = DateTime.Now;
+        task.updated = DateTime.Now;
+        this.context.tasks.Add(task);
+        return this.context.SaveChangesAsync();
+    }
+
+    // Update a task by id then save to MySQL
+    [HttpPut("{id}")]
+    public Task Put(Guid id, [FromBody]task task)
+    {
+        task.id = id;
+        task.updated = DateTime.Now;
+        var entry = this.context.Entry(task);
+        entry.State = EntityState.Modified;
+        entry.Property(o => o.created).IsModified = false;
+        entry.Property(o => o.creator).IsModified = false;
+        return this.context.SaveChangesAsync();
+    }
+
+    // Delete a task by id from MySQL
+    [HttpDelete("{id}")]
+    public Task Delete(Guid id)
+    {
+        this.context.Entry(new task() { id = id }).State = EntityState.Deleted;
+        return this.context.SaveChangesAsync();
+    }
 }
 ```
 
