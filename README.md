@@ -19,7 +19,7 @@ npm -v
 
 ## Session 1: Build Backend API
 1. Create new **ASP.NET Core Web API** project in VS2017 Community Edition: **nyt.core.tasks**
-2. Edit Program.cs to set default web server port to 5002
+2. Edit **Program.cs** to set default web server port to **5002**
 ```csharp
 public static void Main(string[] args)
 {
@@ -55,12 +55,14 @@ dotnet run
 ## Session 2: Configure NGINX Server 
 1. Download nginx: http://nginx.org/download/nginx-1.12.0.zip
 2. Download winsw: http://repo.jenkins-ci.org/releases/com/sun/winsw/winsw/2.1.0/
-3. Extract to the NGINX folder & Set environment variable: %NGINX_HOME%
-4. Install the Service
+3. Extract both zip files to the same NGINX folder (C:\nginx)
+4. Set Windows environment variable: NGINX_HOME=C:\nginx
+5. Install the Service
 ```bash
 winsw-1.19.1-bin.exe install
 ```
-5. Edit nginx.conf: include sites-availabled/*.host; && REMOVE all server configurations {}
+6. Create empty folder **C:\nginx\conf\sites-availabled**
+7. Edit **C:\nginx\conf\nginx.conf**: to include all configuration files from sites-availabled/*.host
 ```conf
 http {
 ...
@@ -68,27 +70,42 @@ http {
 ...
 }
 ```
-6. Create file sites-availabled/domain.name.host
+8. REMOVE all server configurations then we will have the following **C:\nginx\conf\nginx.conf** content
+```conf
+worker_processes  1;
+events {
+	worker_connections	1024;
+}
+http {
+	include			mime.types;
+	include			sites-availabled/*.host;
+	default_type		application/octet-stream;
+	sendfile                on;
+	keepalive_timeout	65;
+}
+```
+6. Create file **C:\nginx\conf\sites-availabled\taskservice.host**
 ```conf
 server {
 	listen 80;
-	access_log logs/access_domain_name.log;
-	error_log logs/error_domain_name.log;
-
-	server_name domain.name;
-
+	access_log logs/access_taskservice_dev.log;
+	error_log logs/error_taskservice_dev.log;
+	
+	server_name taskservice.dev;
+	
 	location / {
-		proxy_pass http://localhost:5001;
-		proxy_set_header Host domain.name;
+		proxy_pass http://localhost:5002;
+		proxy_set_header Host taskservice.dev;
 	}
 }
 ```
 7. Map host C:\Windows\System32\drivers\etc\hosts
 ```conf
-127.0.0.1 domain.name 
+127.0.0.1 taskservice.dev
 ```
 8. Start NGINX service in services.msc
-9. Test & Debug VS2017 NGINX url: http://domain.name/api/values
+9. Test & Debug VS2017 NGINX url: http://taskservice.dev/api/values
+10. Back to **Step 3 in Session 1** in VS2017 to change the **Project Url** to http://taskservice.dev/api/values
 
 ## Session 3: Configure Swagger UI for ASP.NET Core APIs
 1. Install & restore NUGET package **Swashbuckle.AspNetCore** to the ASP.NET Core APIs project
@@ -108,23 +125,23 @@ app.UseSwaggerUI(c => {
 	c.SwaggerEndpoint("/swagger/v1/swagger.json", "XXXService API v1");
 });
 ```
-4. Run & Debug **Swagger UI** url: http://domain.name/swagger
+4. Run & Debug **Swagger UI** url: http://taskservice.dev/swagger
 
 ## Session 4: Build Swagger C# Client
-1. Create new .NET Core Console project named: **domain.name.client**
+1. Create new .NET Core Console project named: **taskservice.dev.client**
 2. Install **autorest** npm package: 
 ```bash
 npm install -g autorest
 ```
-3. Save Swagger file http://domain.name/swagger/v1/swagger.json to project root
+3. Save Swagger file http://taskservice.dev/swagger/v1/swagger.json to project root
 4. Run the autorest C# generation tool at project root
 ```bash
-autorest -Namespace domain.name.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName domain.name.client
+autorest -Namespace taskservice.dev.client -CodeGenerator CSharp -Modeler Swager -Input swagger.json -PackageName taskservice.dev.client
 ```
 5. Install & restore NUGET package **Microsoft.Rest.ClientRuntime**
 6. Edit **Program.Main()** to test generarted client code by calling ASP.NET Core APIs
 ```csharp
-var client = new XXXServiceAPI(new Uri("http://domain.name"));
+var client = new XXXServiceAPI(new Uri("http://taskservice.dev"));
 Console.WriteLine($"API Result: {client.ApiValuesGet()}");
 ```
 7. Debug both Client & Server
@@ -217,7 +234,7 @@ export namespace xxxAPI {
 ```
 5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **XXXServiceAPI.ts**
 ```typescript
-let xxxClient = new XXXServiceAPI.Client("http://domain.name");
+let xxxClient = new XXXServiceAPI.Client("http://taskservice.dev");
 xxxClient.apiXxxGet().then(result => console.log("API result", result));
 ```
 6. Build & Run, we will encouter error message from Browser at Web API calling code: Access-Control-Allow-Origin
