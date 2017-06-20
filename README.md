@@ -330,6 +330,9 @@ export namespace TaskServiceAPI {
 ```
 5. Edit **app.ts** to call Web APIs from Browser client by using generated TypeScript code **TaskServiceAPI.ts**
 ```typescript
+import * as $ from "jquery"
+import { TaskServiceAPI } from "./TaskServiceAPI"
+
 let taskServiceClient = new TaskServiceAPI.Client("http://taskservice.dev");
 taskClient.apiTasksGet().then(result => console.log("API result", result));
 ```
@@ -352,4 +355,4 @@ public class Startup
     }
 }
 ```
-9. Rebuild & run **nyt.core.tasks** project, then back to browser to test again!
+8. Rebuild & run **nyt.core.tasks** project, then back to browser to test again!
